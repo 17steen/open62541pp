@@ -9,7 +9,7 @@ project(
 )
 
 # set c++ standard explicitly, compile feature "cxx_std_17" does not set -std=c++17 compile flag
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -49,7 +49,6 @@ else()
     set(warnings
         -Wall
         -Wextra
-        -Wshadow
         -Wnon-virtual-dtor
         -Wpedantic
     )

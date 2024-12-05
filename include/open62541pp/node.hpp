@@ -5,6 +5,7 @@
 #include <utility>  // move
 #include <vector>
 
+#include "datatype.hpp"
 #include "open62541pp/bitmask.hpp"
 #include "open62541pp/common.hpp"
 #include "open62541pp/config.hpp"
@@ -1176,6 +1177,14 @@ public:
         return *this;
     }
 
+    // /// Write scalar to variable node.
+    // template <typename T>
+    // Node& writeValueScalar(const T& value, const DataType& dataType) {
+    //     // NOLINTNEXTLINE(*-const-cast), variant isn't modified, try to avoid copy
+    //     writeValue(Variant{value, dataType});
+    //     return *this;
+    // }
+    //
     /// Write array value to variable node.
     template <typename ArrayLike>
     Node& writeValueArray(const ArrayLike& array) {
@@ -1196,6 +1205,22 @@ public:
         return *this;
     }
 
+    // /// Write array value to variable node.
+    // template <typename ArrayLike>
+    // Node& writeValueArray(ArrayLike&& array, const DataType& dataType) {
+    //     writeValue(
+    //         Variant::fromArray<VariantPolicy::Reference>(std::forward<ArrayLike>(array), dataType)
+    //     );
+    //     return *this;
+    // }
+    //
+    // /// Write range of elements as array value to variable node.
+    // template <typename InputIt>
+    // Node& writeValueArray(InputIt first, InputIt last, const DataType& dataType) {
+    //     writeValue(Variant::fromArray<VariantPolicy::Reference>(first, last), dataType);
+    //     return *this;
+    // }
+    //
     /// @wrapper{services::writeDataType}
     Node& writeDataType(const NodeId& dataType) {
         services::writeDataType(connection(), id(), dataType).throwIfBad();

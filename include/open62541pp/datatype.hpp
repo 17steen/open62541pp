@@ -343,12 +343,30 @@ public:
     auto& addField(std::string_view fieldName, const UA_DataType& fieldType);
 
     /**
+     * Add a structure field from an offset.
+     * @tparam TMember Type of the member, e.g. `opcua::String`
+     * @param fieldName Human-readable field name
+     * @param offset Offset of the member in the structure
+     * @param fieldType Member data type
+     */
+    template <typename TMember>
+    auto& addFieldWithOffset(std::string_view fieldName, size_t offset, const UA_DataType& fieldType);
+
+    /**
      * Add a structure field (derive DataType from `field`).
      * @overload
      */
     template <auto U::* field>
     auto& addField(std::string_view fieldName) {
         return addField<field>(fieldName, detail::getMemberDataType<field>());
+    }
+
+    /**
+     *  Add a structure field from an offset (derive DataType from `field).
+     */
+    template <typename TMember>
+    auto& addFieldWithOffset(std::string_view fieldName, const size_t offset) {
+        return addFieldWithOffset<TMember>(fieldName, offset, getDataType<std::remove_pointer_t<TMember>>());
     }
 
     /**
@@ -469,6 +487,12 @@ auto& DataTypeBuilder<T, Tag, U>::addField(
     std::string_view fieldName, const UA_DataType& fieldType
 ) {
     using TMember = detail::MemberTypeT<decltype(field)>;
+    return addFieldWithOffset<TMember>(fieldName, detail::offsetOfMember(field), fieldType);
+}
+
+template <typename T, typename Tag, typename U>
+template <typename TMember>
+auto& DataTypeBuilder<T, Tag, U>::addFieldWithOffset(std::string_view fieldName, size_t offset, const UA_DataType& fieldType) {
     static_assert(
         std::is_same_v<Tag, detail::TagDataTypeStruct>,
         "Built type must be a struct or class to add members"
@@ -486,7 +510,7 @@ auto& DataTypeBuilder<T, Tag, U>::addField(
     member.setPadding({});  // calculate padding between members later
     member.setIsArray(false);
     member.setIsOptional(std::is_pointer_v<TMember>);
-    fields_.push_back({sizeof(TMember), detail::offsetOfMember(field), std::move(member)});
+    fields_.push_back({sizeof(TMember), offset, std::move(member)});
     return *this;
 }
 
