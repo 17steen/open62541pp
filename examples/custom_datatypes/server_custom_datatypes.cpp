@@ -44,6 +44,17 @@ struct opcua_compatible_t {
 };
 
 
+struct IntArray {
+    size_t size;
+    int* values;
+
+    IntArray(const std::vector<int>& vec) {
+        size = vec.size();
+        values = new int[vec.size()];
+        std::uninitialized_copy(vec.begin(), vec.end(), values);
+    }
+};
+
 struct NestedStruct {
     opcua::String string;
     Point point;
@@ -100,7 +111,7 @@ struct as_opcua_compatible {
 
 struct NotOpcuaStruct {
     std::string normal_string;
-    std::vector<int> normal_vector;
+    // std::vector<int> normal_vector;
 };
 
 static_assert(std::is_aggregate_v<NotOpcuaStruct>);
@@ -171,17 +182,18 @@ struct TypeConverter<NotOpcuaStruct> {
     using Type = NotOpcuaStruct;
 
     static void fromNative(const NativeType& src, Type& dst) {
-        reflect::for_each<NativeType>([&](auto I) {
-            using from_type = std::tuple_element_t<I, NativeType>;
-            using to_type = reflect::member_type<I, Type>;
+        reflect::for_each<Type>([&](auto I) {
+            using opcua_tuple_element_type = std::tuple_element_t<I, NativeType>;
+            using native_type_member = reflect::member_type<I, Type>;
 
+            const auto& tuple_element = std::get<I>(src);
             auto& member = reflect::get<I>(dst);
 
-            if constexpr (std::is_convertible_v<from_type, to_type>) {
-                member = std::get<I>(src);
+            if constexpr (std::is_convertible_v<opcua_tuple_element_type, native_type_member>) {
+                member = tuple_element;
             }
-            else if constexpr (detail::isConvertibleType<to_type>) {
-                TypeConverter<to_type>::fromNative(src, member);
+            else if constexpr (detail::isConvertibleType<native_type_member>) {
+                opcua::TypeConverter<native_type_member>::fromNative(tuple_element, member);
             }
             else {
                 []<bool false_v = false>() { static_assert(false_v, "type cannot be converted"); }();
@@ -190,6 +202,23 @@ struct TypeConverter<NotOpcuaStruct> {
     }
 
     static void toNative(const Type& src, NativeType& dst) {
+        reflect::for_each<Type>([&](auto I) {
+            using opcua_tuple_element_type = std::tuple_element_t<I, NativeType>;
+            using native_member_type = reflect::member_type<I, Type>;
+
+            const auto& member = reflect::get<I>(src);
+            auto& tuple_element = std::get<I>(dst);
+
+            if constexpr (std::is_convertible_v<native_member_type, opcua_tuple_element_type>) {
+                    tuple_element = member;
+            }
+            else if constexpr (detail::isConvertibleType<native_member_type>) {
+                    opcua::TypeConverter<native_member_type>::toNative(member, tuple_element);
+            }
+            else {
+                    []<bool false_v = false>() { static_assert(false_v, "type cannot be converted"); }();
+            }
+        });
     }
 };
 }
@@ -233,8 +262,8 @@ int main() {
     structureDataTypeNode.addDataType(dataTypeOpt.typeId(), "OptDataType");
     structureDataTypeNode.addDataType(dataTypeUni.typeId(), "UniDataType");
     structureDataTypeNode.addDataType(opcua_tuple_type.typeId(), "NotOpcuaStructDataType");
-    opcua::Node enumerationDataTypeNode(server, opcua::DataTypeId::Enumeration);
     structureDataTypeNode.addDataType(dataTypeNested.typeId(), "NestedStructDataType");
+    opcua::Node enumerationDataTypeNode(server, opcua::DataTypeId::Enumeration);
     enumerationDataTypeNode.addDataType(dataTypeColor.typeId(), "Color")
         .addProperty(
             {0, 0},  // auto-generate node id
