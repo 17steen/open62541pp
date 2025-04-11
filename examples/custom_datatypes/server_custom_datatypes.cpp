@@ -93,12 +93,12 @@ struct opcua_convertible {
     static_assert(sizeof(T) != sizeof(T), "Type not convertible to OPC UA type");
 };
 
-template<typename T> requires opcua::detail::isConvertibleType<T>
+template<typename T> requires opcua::detail::IsConvertible<T>::value
 struct opcua_convertible<T> {
     using type = typename opcua::TypeConverter<T>::NativeType;
 };
 
-template<typename T> requires opcua::detail::isRegisteredType<T>
+template<typename T> requires opcua::detail::IsRegistered<T>::value
 struct opcua_convertible<T> {
     using type = typename opcua::TypeRegistry<T>::NativeType;
 };
@@ -192,7 +192,7 @@ struct TypeConverter<NotOpcuaStruct> {
             if constexpr (std::is_convertible_v<opcua_tuple_element_type, native_type_member>) {
                 member = tuple_element;
             }
-            else if constexpr (detail::isConvertibleType<native_type_member>) {
+            else if constexpr (detail::IsConvertible<native_type_member>::value) {
                 opcua::TypeConverter<native_type_member>::fromNative(tuple_element, member);
             }
             else {
@@ -212,7 +212,7 @@ struct TypeConverter<NotOpcuaStruct> {
             if constexpr (std::is_convertible_v<native_member_type, opcua_tuple_element_type>) {
                     tuple_element = member;
             }
-            else if constexpr (detail::isConvertibleType<native_member_type>) {
+            else if constexpr (detail::IsConvertible<native_member_type>::value) {
                     opcua::TypeConverter<native_member_type>::toNative(member, tuple_element);
             }
             else {
