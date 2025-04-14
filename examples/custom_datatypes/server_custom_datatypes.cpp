@@ -65,7 +65,7 @@ template<>
 struct TypeRegistry<Measurements>
 {
     static const auto& getDataType() noexcept {
-        return get_custom_datatype_ref<Measurements>();
+        return getMeasurementsDataType();
     }
 };
 
@@ -237,7 +237,7 @@ int main() {
 
     // Get custom type definitions from common header
     const auto &dataTypePoint = get_custom_datatype_ref<Point>();
-    const auto &dataTypeMeasurements = get_custom_datatype_ref<Measurements>();
+    const auto &dataTypeMeasurements = getMeasurementsDataType();
     const auto &dataTypeOpt = get_custom_datatype_ref<Opt>();
     const auto &dataTypeUni = getUniDataType();
     const auto &dataTypeColor = getColorDataType();
