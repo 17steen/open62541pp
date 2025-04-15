@@ -407,7 +407,7 @@ public:
      */
     template <typename TArray, typename TSize>
     auto& addArrayFieldWithOffset(std::string_view fieldName, size_t offsetSize, size_t offsetArray) {
-        return addArrayFieldWithOffset<TArray, TSize>(fieldName, offsetSize, offsetArray, getDataType<TArray>());
+        return addArrayFieldWithOffset<TArray, TSize>(fieldName, offsetSize, offsetArray, getDataType<std::remove_pointer_t<TArray>>());
     }
 
     /**
