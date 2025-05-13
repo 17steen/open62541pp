@@ -142,7 +142,8 @@ void ServerConfig::setAccessControl(AccessControlBase& accessControl) {
     detail::clear(native().accessControl);
     native().accessControl = accessControl.create(false);
     setHighestSecurityPolicyForUserTokenTransfer(native());
-    copyUserTokenPoliciesToEndpoints(native());
+    // Uncommenting that line breaks log in
+    // copyUserTokenPoliciesToEndpoints(native());
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
@@ -151,7 +152,8 @@ void ServerConfig::setAccessControl(std::unique_ptr<AccessControlBase>&& accessC
         detail::clear(native().accessControl);
         native().accessControl = accessControl.release()->create(true);
         setHighestSecurityPolicyForUserTokenTransfer(native());
-        copyUserTokenPoliciesToEndpoints(native());
+        // Uncommenting that line breaks log in
+        // copyUserTokenPoliciesToEndpoints(native());
     }
 }
 
@@ -299,7 +301,7 @@ std::vector<Session> Server::sessions() {
     std::vector<Session> result;
     const std::scoped_lock lock(context().sessionRegistry.mutex);
     for (auto& [id, context] : context().sessionRegistry.sessions) {
-        result.emplace_back(*this, id, context);
+        result.emplace_back(*this, id, static_cast<std::any*>(context));
     }
     return result;
 }
